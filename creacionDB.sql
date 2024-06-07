@@ -1,4 +1,4 @@
--- Active: 1717012450849@@127.0.0.1@3306@dbgarden
+-- Active: 1717105247149@@127.0.0.1@3306@dbGarden
 
 -- CREACION Y USO DE LA BASE DE DATOS
 
@@ -116,10 +116,11 @@ CREATE TABLE IF NOT EXISTS modelo(
 );
 
 CREATE TABLE IF NOT EXISTS vehiculo(
-    idVehiculo INT AUTO_INCREMENT PRIMARY KEY,
+    idVehiculo INT AUTO_INCREMENT,
     placa VARCHAR(10) NOT NULL UNIQUE,
     idCliente INT,
     idModelo INT,
+    PRIMARY KEY(idVehiculo, idCliente),
     Foreign Key (idModelo) REFERENCES modelo(idModelo),
     Foreign Key (idCliente) REFERENCES cliente(idCliente)
 );
@@ -145,7 +146,7 @@ CREATE TABLE IF NOT EXISTS telefonoProveedor(
     Foreign Key (idProveedor) REFERENCES proveedor(idProveedor)
 );
 
-/* CREACION TABLA PIEZAS  / INVENTARIO  / UBICACIO */
+/* CREACION TABLA PIEZAS  / INVENTARIO  / UBICACION */
 
 CREATE TABLE IF NOT EXISTS pieza(
     idPieza INT AUTO_INCREMENT PRIMARY KEY,
@@ -156,7 +157,7 @@ CREATE TABLE IF NOT EXISTS pieza(
 CREATE TABLE IF NOT EXISTS ubicacion(
     idUbicacion INT AUTO_INCREMENT PRIMARY KEY,
     descripcion TEXT NOT NULL,
-    nombreUbicacion VARCHAR(20) NOT NULL,
+    nombreUbicacion VARCHAR(40) NOT NULL,
     idTaller INT,
     Foreign Key (idTaller) REFERENCES sedeTaller(idTaller)
 );
@@ -228,7 +229,9 @@ CREATE TABLE IF NOT EXISTS reparacion(
     costoTotal DOUBLE(10,2) NOT NULL,
     descripcion  TEXT,
     idServicio INT,
-    Foreign Key (idServicio) REFERENCES servicio(idServicio)
+    idvehiculo  INT,
+    Foreign Key (idServicio) REFERENCES servicio(idServicio),
+    Foreign Key (idvehiculo) REFERENCES vehiculo(idvehiculo)
 );
 
 /* CREACION TABLA CITA */ 
@@ -240,7 +243,7 @@ CREATE TABLE IF NOT EXISTS cita(
     idVehiculo INT,
     idServicio INT,
     PRIMARY KEY(idCita, idCliente, idVehiculo, idServicio),
-    Foreign Key (idCliente) REFERENCES cliente(idCliente),
+    Foreign Key (idCliente) REFERENCES vehiculo(idCliente),
     Foreign Key (idVehiculo) REFERENCES vehiculo(idVehiculo),
     Foreign Key (idServicio) REFERENCES servicio(idServicio)
 );
