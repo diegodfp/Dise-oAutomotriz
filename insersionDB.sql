@@ -202,17 +202,18 @@ INSERT INTO telefonoProveedor (fijo, celPrincipal, celSecundario, idProveedor) V
 /* INSERSION DATOS PARA LAS TABLAS DE PIEZA - UBICACION E INVENTARIO */ 
 
 -- Inserciones en la tabla 'pieza'
-INSERT INTO pieza (nombrePieza, descripcion) VALUES 
-('Filtro de Aceite', 'Filtro de aceite para motor'),
-('Bujía', 'Bujía de encendido'),
-('Pastillas de Freno', 'Juego de pastillas de freno delanteras'),
-('Amortiguador', 'Amortiguador delantero derecho'),
-('Filtro de Aire', 'Filtro de aire del motor'),
-('Radiador', 'Radiador de motor'),
-('Correa de Distribución', 'Correa de distribución para motor'),
-('Alternador', 'Alternador para sistema eléctrico'),
-('Batería', 'Batería de 12V'),
-('Aceite de Motor', 'Aceite sintético 5W-30');
+INSERT INTO pieza (nombrePieza, descripcion, precioVenta) VALUES 
+('Filtro de Aceite', 'Filtro de aceite para motor', 15.75),
+('Bujía', 'Bujía de encendido', 5.88),
+('Pastillas de Freno', 'Juego de pastillas de freno delanteras', 30.50),
+('Amortiguador', 'Amortiguador delantero derecho', 25.75),
+('Filtro de Aire', 'Filtro de aire del motor', 20.88),
+('Radiador', 'Radiador de motor', 80.50),
+('Correa de Distribución', 'Correa de distribución para motor', 35.75),
+('Alternador', 'Alternador para sistema eléctrico', 100.50),
+('Batería', 'Batería de 12V', 55.50),
+('Aceite de Motor', 'Aceite sintético 5W-30', 45.63);
+
 
 -- Inserciones en la tabla 'ubicacion'
 INSERT INTO ubicacion (descripcion, nombreUbicacion, idTaller) VALUES 
@@ -342,6 +343,47 @@ INSERT INTO reparacion (fecha, costoTotal, descripcion, idServicio, idvehiculo) 
 ('2024-06-22', 50.00, 'Cambio de aceite y filtro de aceite', 9, 16),                -- Servicio: Cambio de Aceite, Vehículo: TUV678
 ('2024-06-23', 80.00, 'Reemplazo de pastillas de freno desgastadas', 10, 17),      -- Servicio: Cambio de Pastillas de Freno, Vehículo: WXY901
 ('2024-06-24', 300.00, 'Reparación de problemas mecánicos en el motor', 4, 18);     -- Servicio: Reparación de Motor, Vehículo: ZAB234
+/* INSERTS PARA TABLA INTERMEDIA ENTRE REPARACION Y PIEZAS */
+INSERT INTO reparacionPiezas (idReparacion, idPieza, cantidad) VALUES
+(1, 1, 1), 
+(1, 10, 1),
+(2, 3, 1),
+(3, 9, 1),
+(4, 6, 1),
+(9, 1, 1), 
+(9, 10, 1),
+(10, 3, 1),
+(11, 6, 1),
+(5, 6, 1),
+(6, 6, 1),
+(7, 6, 1),
+(8, 6, 1);
+
+/* INSERTS TABLA INTERMEDIA ENTRE EMPLEADO Y REPARACION */
+
+INSERT INTO reparacionEmpleado (idReparacion, idEmpleado, duracionHoras, notas) VALUES 
+(1, 1, 3, 'Reparación completada satisfactoriamente.'),
+(1, 2, 4, 'Se requirió tiempo adicional para completar la reparación.'),
+(2, 3, 2, 'Revisión de frenos finalizada sin problemas.'),
+(2, 4, 3, 'Se encontraron algunos problemas adicionales durante la revisión.'),
+(3, 5, 5, 'Reemplazo de batería realizado con éxito.'),
+(3, 6, 1, 'Verificación del sistema eléctrico completada.'),
+(4, 7, 8, 'Reparación del motor completada.'),
+(4, 8, 6, 'Se necesitó más tiempo debido a la complejidad de la reparación.'),
+(5, 9, 2, 'Alineación y balanceo finalizados.'),
+(5, 10, 3, 'Se realizó un ajuste adicional en el sistema de dirección.'),
+(6, 11, 6, 'Cambio de llantas completado.'),
+(6, 12, 7, 'Se requirió tiempo adicional debido a problemas con una de las llantas.'),
+(7, 13, 4, 'Reparación de suspensión finalizada.'),
+(7, 14, 3, 'Se realizó un ajuste adicional en el amortiguador.'),
+(8, 15, 3, 'Revisión del sistema eléctrico completada sin problemas.'),
+(8, 16, 2, 'Se realizaron algunas reparaciones menores en los cables eléctricos.'),
+(9, 17, 5, 'Cambio de aceite y filtro completado.'),
+(9, 18, 1, 'Se realizó una inspección adicional del motor.'),
+(10, 19, 3, 'Cambio de pastillas de freno completado.'),
+(10, 20, 2, 'Se realizó una inspección adicional del sistema de frenos.'),
+(11, 1, 5, 'Reparación completada satisfactoriamente.'),
+(12, 1, 2, 'Reparación completada satisfactoriamente.');
 
 /* INSERTS TABLA CITA */ 
 
@@ -366,32 +408,6 @@ INSERT INTO cita (fechaHora, idCliente, idVehiculo, idServicio) VALUES
 ('2024-06-09 15:45:00', 17, 3, 8), -- Felipe Herrera, vehículo placa ZAB234, servicio Revisión de Sistema Eléctrico
 ('2024-06-10 09:00:00', 18, 4, 9), -- Lucía Ramos, vehículo placa CDE567, servicio Cambio de Aceite
 ('2024-06-10 10:30:00', 18, 5, 10); -- Lucía Ramos, vehículo placa CDE567, servicio Cambio de Pastillas de Freno
-
-
-/* INSERTS TABLA INTERMEDIA ENTRE EMPLEADO Y REPARACION */
-
-INSERT INTO reparacionEmpleado (idReparacion, idEmpleado, duracionHoras, notas) VALUES 
-(1, 1, 3, 'Reparación completada satisfactoriamente.'),
-(1, 2, 4, 'Se requirió tiempo adicional para completar la reparación.'),
-(2, 3, 2, 'Revisión de frenos finalizada sin problemas.'),
-(2, 4, 3, 'Se encontraron algunos problemas adicionales durante la revisión.'),
-(3, 5, 5, 'Reemplazo de batería realizado con éxito.'),
-(3, 6, 1, 'Verificación del sistema eléctrico completada.'),
-(4, 7, 8, 'Reparación del motor completada.'),
-(4, 8, 6, 'Se necesitó más tiempo debido a la complejidad de la reparación.'),
-(5, 9, 2, 'Alineación y balanceo finalizados.'),
-(5, 10, 3, 'Se realizó un ajuste adicional en el sistema de dirección.'),
-(6, 11, 6, 'Cambio de llantas completado.'),
-(6, 12, 7, 'Se requirió tiempo adicional debido a problemas con una de las llantas.'),
-(7, 13, 4, 'Reparación de suspensión finalizada.'),
-(7, 14, 3, 'Se realizó un ajuste adicional en el amortiguador.'),
-(8, 15, 3, 'Revisión del sistema eléctrico completada sin problemas.'),
-(8, 16, 2, 'Se realizaron algunas reparaciones menores en los cables eléctricos.'),
-(9, 17, 5, 'Cambio de aceite y filtro completado.'),
-(9, 18, 1, 'Se realizó una inspección adicional del motor.'),
-(10, 19, 3, 'Cambio de pastillas de freno completado.'),
-(10, 20, 2, 'Se realizó una inspección adicional del sistema de frenos.');
-
 
 /* INSERTS DE FACTURAS Y DETALLES FACTURAS */ 
 

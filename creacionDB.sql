@@ -1,4 +1,4 @@
--- Active: 1717105247149@@127.0.0.1@3306@dbGarden
+-- Active: 1717012450849@@127.0.0.1@3306@dbgarden
 
 -- CREACION Y USO DE LA BASE DE DATOS
 
@@ -116,11 +116,10 @@ CREATE TABLE IF NOT EXISTS modelo(
 );
 
 CREATE TABLE IF NOT EXISTS vehiculo(
-    idVehiculo INT AUTO_INCREMENT,
+    idVehiculo INT AUTO_INCREMENT PRIMARY KEY,
     placa VARCHAR(10) NOT NULL UNIQUE,
     idCliente INT,
     idModelo INT,
-    PRIMARY KEY(idVehiculo, idCliente),
     Foreign Key (idModelo) REFERENCES modelo(idModelo),
     Foreign Key (idCliente) REFERENCES cliente(idCliente)
 );
@@ -146,12 +145,13 @@ CREATE TABLE IF NOT EXISTS telefonoProveedor(
     Foreign Key (idProveedor) REFERENCES proveedor(idProveedor)
 );
 
-/* CREACION TABLA PIEZAS  / INVENTARIO  / UBICACION */
+/* CREACION TABLA PIEZAS  / INVENTARIO  / UBICACIO */
 
 CREATE TABLE IF NOT EXISTS pieza(
     idPieza INT AUTO_INCREMENT PRIMARY KEY,
     nombrePieza VARCHAR(40) NOT NULL,
-    descripcion TEXT
+    descripcion TEXT,
+    precioVenta DOUBLE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS ubicacion(
@@ -229,11 +229,19 @@ CREATE TABLE IF NOT EXISTS reparacion(
     costoTotal DOUBLE(10,2) NOT NULL,
     descripcion  TEXT,
     idServicio INT,
-    idvehiculo  INT,
+    idVehiculo INT,
     Foreign Key (idServicio) REFERENCES servicio(idServicio),
-    Foreign Key (idvehiculo) REFERENCES vehiculo(idvehiculo)
+    Foreign Key (idVehiculo) REFERENCES vehiculo(idVehiculo)
 );
-
+/* CREACION TABLA REPARACION PIEZAS */
+CREATE TABLE IF NOT EXISTS reparacionPiezas(
+    idReparacion INT,
+    idPieza INT,
+    cantidad INT NOT NULL,
+    PRIMARY KEY(idReparacion, idPieza),
+    Foreign Key (idReparacion) REFERENCES reparacion(idReparacion),
+    Foreign Key (idPieza) REFERENCES pieza(idPieza)
+);
 /* CREACION TABLA CITA */ 
 
 CREATE TABLE IF NOT EXISTS cita(
@@ -243,7 +251,7 @@ CREATE TABLE IF NOT EXISTS cita(
     idVehiculo INT,
     idServicio INT,
     PRIMARY KEY(idCita, idCliente, idVehiculo, idServicio),
-    Foreign Key (idCliente) REFERENCES vehiculo(idCliente),
+    Foreign Key (idCliente) REFERENCES cliente(idCliente),
     Foreign Key (idVehiculo) REFERENCES vehiculo(idVehiculo),
     Foreign Key (idServicio) REFERENCES servicio(idServicio)
 );
