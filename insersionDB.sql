@@ -383,7 +383,8 @@ INSERT INTO reparacionEmpleado (idReparacion, idEmpleado, duracionHoras, notas) 
 (10, 19, 3, 'Cambio de pastillas de freno completado.'),
 (10, 20, 2, 'Se realizó una inspección adicional del sistema de frenos.'),
 (11, 1, 5, 'Reparación completada satisfactoriamente.'),
-(12, 1, 2, 'Reparación completada satisfactoriamente.');
+(12, 1, 2, 'Reparación completada satisfactoriamente.'),
+(7, 2, 3, 'Se realizó un ajuste adicional en el amortiguador.');
 
 /* INSERTS TABLA CITA */ 
 
@@ -422,7 +423,8 @@ INSERT INTO facturacion (idFacturacion, idCliente, fecha, total) VALUES
 (7, 7, '2024-06-07 11:30:00', 200.00),
 (8, 8, '2024-06-08 10:15:00', 150.00),
 (9, 9, '2024-06-09 13:00:00', 100.00),
-(10, 10, '2024-06-10 14:30:00', 80.00);
+(10, 10, '2024-06-10 14:30:00', 80.00),
+(11, 1, '2024-06-10 14:30:00', 100.00);
 
 -- Inserts para la tabla facturaDetalles
 INSERT INTO facturaDetalles (idFacturacion, idReparacion, cantidad, precio) VALUES 
