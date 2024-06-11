@@ -573,11 +573,10 @@ CREATE PROCEDURE insertarOrdenCompra(
 BEGIN
     DECLARE last_insert_id INT;
 
-    -- Insertar en la tabla ordenCompra
     INSERT INTO ordenCompra (fecha, total, idProveedor, idEmpleado)
     VALUES (p_fecha, p_total, p_idProveedor, p_idEmpleado);
     
-    -- Obtener el último ID insertado
+    
     SET last_insert_id = LAST_INSERT_ID();
 
 END $$
