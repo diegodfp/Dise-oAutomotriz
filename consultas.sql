@@ -452,14 +452,14 @@ CREATE PROCEDURE generarFactura(
 BEGIN
     DECLARE mensaje VARCHAR(100);
 
-    -- Insertar la nueva factura en la tabla facturacion
+
     INSERT INTO facturacion (idCliente, fecha, total)
     VALUES (p_idCliente, p_fecha, p_total);
 
-    -- Mensaje de confirmación
+
     SET mensaje = 'Factura creada correctamente';
 
-    -- Seleccionar mensaje para mostrarlo como resultado
+
     SELECT mensaje AS 'Mensaje';
 END $$
 
@@ -476,16 +476,16 @@ BEGIN
 
     DECLARE vehiculoID INT;
 
-    -- Obtener el idVehiculo a partir de la placa
+   
     SELECT idVehiculo INTO vehiculoID
     FROM vehiculo
     WHERE placa = p_placa;
 
-    -- Verificar si el vehículo existe
+    
     IF vehiculoID IS NULL THEN
         SELECT 'Vehículo no encontrado' AS Mensaje;
     ELSE
-        -- Seleccionar el historial de reparaciones para el vehículo
+        
         SELECT r.fecha, r.descripcion, r.costoTotal, s.nombreServicio
         FROM reparacion r
         JOIN servicio s ON r.idServicio = s.idServicio
