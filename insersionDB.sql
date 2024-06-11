@@ -424,7 +424,8 @@ INSERT INTO facturacion (idFacturacion, idCliente, fecha, total) VALUES
 (8, 8, '2024-06-08 10:15:00', 150.00),
 (9, 9, '2024-06-09 13:00:00', 100.00),
 (10, 10, '2024-06-10 14:30:00', 80.00),
-(11, 1, '2024-06-10 14:30:00', 100.00);
+(11, 1, '2024-06-10 14:30:00', 100.00),
+(12, 4, '2024-06-03 09:45:00', 200.00);
 
 -- Inserts para la tabla facturaDetalles
 INSERT INTO facturaDetalles (idFacturacion, idReparacion, cantidad, precio) VALUES 

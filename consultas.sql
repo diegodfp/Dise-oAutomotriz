@@ -248,4 +248,390 @@ ORDER BY
     e.idEmpleado, r.fecha;
     
 
+/* /// COMIENZO DE SUBCONSULTAS */
+-- 1. Obtener el cliente que ha gastado más en reparaciones durante el último año.
 
+SELECT 
+    CONCAT(c.nombre," ",c.apellido1) AS cliente , SUM(f.total)
+FROM  
+    cliente c
+JOIN
+    facturacion f ON f.idCliente = c.idCliente
+WHERE
+    c.idCliente = (
+        SELECT 
+            f.idCliente
+        FROM
+            facturacion f
+        GROUP BY
+            f.idCliente
+        ORDER BY
+            SUM(f.total) DESC LIMIT 1
+    ) AND f.fecha BETWEEN '2024-01-01 00:00:00' AND '2024-12-31 23:59:59'
+GROUP BY f.idCliente;
+
+-- 2.   Obtener la pieza más utilizada en reparaciones durante el último mes
+
+ 
+SELECT 
+    p.nombrePieza  , SUM(rp.cantidad) VecesUsada
+FROM  
+    pieza p
+JOIN
+    reparacionPiezas rp ON rp.idPieza = p.idPieza
+JOIN
+    reparacion r ON r.idReparacion = rp.idReparacion
+WHERE
+    p.idPieza = (
+        SELECT 
+            rp.idPieza
+        FROM
+            reparacionPiezas rp
+        GROUP BY
+            rp.idPieza
+        ORDER BY
+            SUM(rp.cantidad) DESC LIMIT 1
+    )        AND r.fecha BETWEEN '2024-05-01 00:00:00' AND '2024-06-30 23:59:59'                 
+GROUP BY rp.idPieza;
+
+    -- 3. Obtener los proveedores que suministran las piezas más caras
+SELECT 
+    pr.nombre AS NombreProveedor,
+    p.nombrePieza AS NombrePieza,
+    pp.precio AS Precio
+FROM 
+    proveedoresPiezas pp
+JOIN 
+    proveedor pr ON pp.idProveedor = pr.idProveedor
+JOIN 
+    pieza p ON pp.idPieza = p.idPieza
+WHERE 
+    pp.precio = (SELECT MAX(precio) FROM proveedoresPiezas);
+
+-- 4. Listar las reparaciones que no utilizaron piezas específicas durante el último año
+
+SELECT 
+    r.idReparacion, r.fecha, r.costoTotal, r.descripcion, r.idServicio, r.idVehiculo
+FROM 
+    reparacion r
+WHERE 
+    r.idReparacion NOT IN (
+        SELECT 
+            rp.idReparacion
+        FROM 
+            reparacionPiezas rp
+        WHERE 
+            rp.idPieza = 1
+    ) AND r.fecha  BETWEEN '2024-01-01 00:00:00' AND '2024-12-31 23:59:59'
+    ;
+
+-- 5.  Obtener las piezas que están en inventario por debajo del 10% del stock inicial
+SELECT 
+    p.idPieza,
+    p.nombrePieza,
+    ip.cantidad AS stockActual,
+    si.stockInicial
+FROM 
+    pieza p
+JOIN 
+    inventarioPiezas ip ON p.idPieza = ip.idPieza
+JOIN 
+    (SELECT 
+         idPieza, 
+         MAX(cantidad) AS stockInicial
+     FROM 
+         inventarioPiezas
+     GROUP BY 
+         idPieza) si ON p.idPieza = si.idPieza;
+
+/* --- PROCEDIMIENTOS ALMACENADOS --- */ 
+
+-- 1. Crear un procedimiento almacenado para insertar una nueva reparación.
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS insertarNuevaReparacion;
+CREATE PROCEDURE insertarNuevaReparacion(
+    IN fecha DATE,
+    IN costoTotal DOUBLE(10,2),
+    IN descripcion TEXT,
+    IN idServicio TINYINT,
+    IN idVehiculo TINYINT
+)
+BEGIN
+    DECLARE mensaje VARCHAR(100);
+    INSERT INTO reparacion  (idReparacion, fecha, costoTotal, descripcion, idServicio, idVehiculo)
+    VALUES (NULL, fecha, costoTotal, descripcion, idServicio, idVehiculo);
+    IF ROW_COUNT() > 0 THEN
+        SET mensaje = 'El registro se ha creado correctamente.';
+    ELSE
+        SET mensaje = 'Error al crear el registro.';
+    END IF;
+    SELECT mensaje AS 'Mensaje';
+END $$
+DELIMITER ;
+
+CALL insertarNuevaReparacion('2024-06-11',200.00,'Reparacion Agregada con PROCEDURE', 1, 1);
+
+-- 2. Crear un procedimiento almacenado para actualizar el inventario de una pieza.
+
+DELIMITER $$
+DROP PROCEDURE IF EXISTS actualizarInventarioPieza;
+CREATE PROCEDURE actualizarInventarioPieza(
+    IN idPiezaBusqueda INT,
+    IN nuevaCantidad INT
+)
+BEGIN
+    DECLARE mensaje VARCHAR(100);
+    DECLARE piezaExiste INT;
+
+    SELECT COUNT(*) INTO piezaExiste
+    FROM inventarioPiezas
+    WHERE idPieza = idPiezaBusqueda;
+
+    IF piezaExiste > 0 THEN
+        UPDATE inventarioPiezas
+        SET cantidad = nuevaCantidad
+        WHERE idPieza = idPiezaBusqueda;
+        SET mensaje = 'Registro actualizado correctamente';
+    ELSE
+        SET mensaje = 'Error al crear el registro. asegurese de ingresar bien el id';
+    END IF;
+    SELECT mensaje AS 'Mensaje';
+END $$
+
+DELIMITER ;
+
+CALL actualizarInventarioPieza(1, 500);
+
+SELECT * from inventariopiezas;
+
+-- 3. Crear un procedimiento almacenado para eliminar una cita
+
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS eliminarCita;
+CREATE PROCEDURE eliminarCita(
+    IN idCitaBusqueda INT
+)
+BEGIN
+    DECLARE mensaje VARCHAR(100);
+    DECLARE citaExiste INT;
+
+    SELECT COUNT(*) INTO citaExiste
+    FROM cita
+    WHERE idCita = idCitaBusqueda;
+
+    IF citaExiste > 0 THEN
+        DELETE FROM cita
+        WHERE idCita = idCitaBusqueda;
+        SET mensaje = 'Cita eliminada correctamente';
+    ELSE
+        SET mensaje = 'Error: La cita no existe';
+    END IF;
+
+    SELECT mensaje AS 'Mensaje';
+END $$
+
+DELIMITER ;
+
+SELECT * from cita;
+
+CALL eliminarCita(1);
+
+-- 4. Crear un procedimiento almacenado para generar una factura
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS generarFactura;
+CREATE PROCEDURE generarFactura(
+    IN p_idCliente INT,
+    IN p_fecha DATETIME,
+    IN p_total DOUBLE
+)
+BEGIN
+    DECLARE mensaje VARCHAR(100);
+
+    -- Insertar la nueva factura en la tabla facturacion
+    INSERT INTO facturacion (idCliente, fecha, total)
+    VALUES (p_idCliente, p_fecha, p_total);
+
+    -- Mensaje de confirmación
+    SET mensaje = 'Factura creada correctamente';
+
+    -- Seleccionar mensaje para mostrarlo como resultado
+    SELECT mensaje AS 'Mensaje';
+END $$
+
+DELIMITER ;
+
+--5. Crear un procedimiento almacenado para obtener el historial de reparaciones de un vehículo
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS obtenerHistorialReparaciones;
+CREATE PROCEDURE obtenerHistorialReparaciones(
+    IN p_placa VARCHAR(10)
+)
+BEGIN
+
+    DECLARE vehiculoID INT;
+
+    -- Obtener el idVehiculo a partir de la placa
+    SELECT idVehiculo INTO vehiculoID
+    FROM vehiculo
+    WHERE placa = p_placa;
+
+    -- Verificar si el vehículo existe
+    IF vehiculoID IS NULL THEN
+        SELECT 'Vehículo no encontrado' AS Mensaje;
+    ELSE
+        -- Seleccionar el historial de reparaciones para el vehículo
+        SELECT r.fecha, r.descripcion, r.costoTotal, s.nombreServicio
+        FROM reparacion r
+        JOIN servicio s ON r.idServicio = s.idServicio
+        WHERE r.idVehiculo = vehiculoID
+        ORDER BY r.fecha DESC;
+    END IF;
+END $$
+
+DELIMITER ;
+
+CALL obtenerHistorialReparaciones('ABC123');
+
+-- 6.  Crear un procedimiento almacenado para calcular el costo total de reparaciones de un cliente en un período
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS calcularCostoTotalReparaciones;
+CREATE PROCEDURE calcularCostoTotalReparaciones(
+    IN p_idCliente INT,
+    IN p_fechaInicio DATE,
+    IN p_fechaFin DATE
+)
+BEGIN
+    -- Declaración de variables
+    DECLARE costoTotal DOUBLE;
+
+    -- Calcular el costo total de las reparaciones del cliente en el período especificado
+    SELECT SUM(r.costoTotal) INTO costoTotal
+    FROM reparacion r
+    JOIN vehiculo v ON r.idVehiculo = v.idVehiculo
+    WHERE v.idCliente = p_idCliente
+      AND r.fecha BETWEEN p_fechaInicio AND p_fechaFin;
+
+    -- Verificar si se encontraron reparaciones
+    IF costoTotal IS NULL THEN
+        SET costoTotal = 0.0;
+    END IF;
+
+    -- Devolver el costo total
+    SELECT costoTotal AS CostoTotal;
+END $$
+
+DELIMITER ;
+
+CALL calcularCostoTotalReparaciones(1, '2024-01-01', '2024-12-31');
+
+-- 7. Crear un procedimiento almacenado para obtener la lista de vehículos que requieren mantenimiento basado en el kilometraje.
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS obtenerVehiculosMantenimiento;
+CREATE PROCEDURE obtenerVehiculosMantenimiento()
+BEGIN
+    -- Selecciona los vehículos que necesitan mantenimiento basado en el kilometraje
+    SELECT 
+        v.idVehiculo, 
+        v.placa, 
+        v.kilometraje, 
+        m.nombreModelo, 
+        m.kilometrajeMantenimiento
+    FROM 
+        vehiculo v
+    JOIN 
+        modelo m ON v.idModelo = m.idModelo
+    WHERE 
+        v.kilometraje >= m.kilometrajeMantenimiento;
+END $$
+
+DELIMITER ;
+
+CALL obtenerVehiculosMantenimiento();
+
+-- 8.  Crear un procedimiento almacenado para insertar una nueva orden de compra
+
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS insertarOrdenCompra;
+CREATE PROCEDURE insertarOrdenCompra(
+    IN p_fecha DATE,
+    IN p_total DOUBLE,
+    IN p_idProveedor INT,
+    IN p_idEmpleado INT
+)
+BEGIN
+    DECLARE last_insert_id INT;
+
+    -- Insertar en la tabla ordenCompra
+    INSERT INTO ordenCompra (fecha, total, idProveedor, idEmpleado)
+    VALUES (p_fecha, p_total, p_idProveedor, p_idEmpleado);
+    
+    -- Obtener el último ID insertado
+    SET last_insert_id = LAST_INSERT_ID();
+
+END $$
+
+DELIMITER ;
+
+-- 9.  Crear un procedimiento almacenado para actualizar los datos de un cliente
+
+DELIMITER $$
+
+CREATE PROCEDURE actualizarCliente(
+    IN p_idCliente INT,
+    IN p_documento VARCHAR(15),
+    IN p_nombre VARCHAR(25),
+    IN p_apellido1 VARCHAR(25),
+    IN p_apellido2 VARCHAR(25),
+    IN p_direccion VARCHAR(50),
+    IN p_email VARCHAR(50)
+)
+BEGIN
+    UPDATE cliente
+    SET 
+        documento = p_documento,
+        nombre = p_nombre,
+        apellido1 = p_apellido1,
+        apellido2 = p_apellido2,
+        direccion = p_direccion,
+        email = p_email
+    WHERE idCliente = p_idCliente;
+
+    SELECT 'Cliente actualizado correctamente' AS mensaje;
+END $$
+
+DELIMITER ;
+
+CALL actualizarCliente(1, '123456789', 'Juan', 'Perez', 'Gomez', 'Calle 123', 'juan@example.com');
+
+-- 10. Crear un procedimiento almacenado para obtener los servicios más solicitados en un período
+
+DELIMITER $$
+
+CREATE PROCEDURE obtenerServiciosMasSolicitados(
+    IN fechaInicio DATE,
+    IN fechaFin DATE
+)
+BEGIN
+    SELECT s.nombreServicio, COUNT(*) AS vecesSolicitado
+    FROM cita c
+    INNER JOIN servicio s ON c.idServicio = s.idServicio
+    WHERE c.fechaHora BETWEEN fechaInicio AND fechaFin
+    GROUP BY s.nombreServicio
+    ORDER BY vecesSolicitado DESC;
+END $$
+
+DELIMITER ;
+
+CALL obtenerServiciosMasSolicitados('2024-01-01', '2024-12-31');
